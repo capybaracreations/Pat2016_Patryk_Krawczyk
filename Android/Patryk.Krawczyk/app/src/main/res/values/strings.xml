@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Patryk.Krawczyk</string>
+    <string name="loginLayoutEmailTextView">E-mail:</string>
+    <string name="loginLayoutPasswordTextView">Password:</string>
+    <string name="passwordTextViewEmpty">Password required</string>
+    <string name="emailTextViewEmpty">Email required</string>
+    <string name="passwordTextViewWrong">Invalid password!</string>
+    <string name="emailTextViewWrong">Invalid email!</string>
+    <string name="logoutText">LOGOUT</string>
+    <string name="userEmailKey">userEmail</string>
+    <string name="userPasswordKey">userPassword</string>
+</resources>
