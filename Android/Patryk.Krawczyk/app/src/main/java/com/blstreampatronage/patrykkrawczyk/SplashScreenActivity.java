@@ -40,7 +40,7 @@ public class SplashScreenActivity extends AppCompatActivity
         countDownTimer = new CountDownTimer(splashDuration, splashRefreshRate) {
 
             public void onTick(long millisUntilFinished) {
-                // TODO: implement something to let user know that app is running, change @splashRefreshRate
+                // TODO: implement something to let user know that app is running, adjust @splashRefreshRate
             }
 
             public void onFinish() {
@@ -52,7 +52,7 @@ public class SplashScreenActivity extends AppCompatActivity
     }
 
     private void moveToMainActivity() {
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = new Intent(this, LoginActivity.class);
         startActivity(intent);
         finish();
     }
