@@ -9,4 +9,7 @@
     <string name="logoutText">LOGOUT</string>
     <string name="userEmailKey">userEmail</string>
     <string name="userPasswordKey">userPassword</string>
+    <string name="activityCheckConnection">Checking connection...</string>
+    <string name="errorNoPermissionConnectionStatus">App doesnt have internet permissions.</string>
+    <string name="errorProblemWithConnection">No internet connection.</string>
 </resources>

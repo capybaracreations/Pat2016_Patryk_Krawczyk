@@ -1,7 +1,10 @@
 package com.blstreampatronage.patrykkrawczyk;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -19,6 +22,7 @@ public class LoginActivity extends AppCompatActivity {
     private EditText passwordEditText;
     private TextView emailErrorTextView;
     private TextView passwordErrorTextView;
+    private TextView errorLogText;
 
 
     @Override
@@ -42,6 +46,8 @@ public class LoginActivity extends AppCompatActivity {
         passwordEditText      = (EditText) findViewById(R.id.passwordEditText);
         emailErrorTextView    = (TextView) findViewById(R.id.emailErrorText);
         passwordErrorTextView = (TextView) findViewById(R.id.passwordErrorText);
+        errorLogText          = (TextView) findViewById(R.id.networkLogText);
+        errorLogText.setText("");
     }
 
     public void onLoginButton(View v) {
@@ -52,7 +58,8 @@ public class LoginActivity extends AppCompatActivity {
         boolean properPassword = validatePassword(password);
 
         if (properEmail && properPassword) {
-            loginUser(email, password);
+            errorLogText.setText("");
+            if (checkConnectionAvailability()) loginUser(email, password);
         }
     }
 
@@ -97,9 +104,30 @@ public class LoginActivity extends AppCompatActivity {
         editor.putString(getString(R.string.userPasswordKey), password);
         editor.commit();
 
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = new Intent(this, ImagesActivity.class);
         startActivity(intent);
         finish();
+    }
+    public boolean checkConnectionAvailability()
+    {
+        errorLogText.setText(R.string.activityCheckConnection);
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        try
+        {
+            NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+            return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+        }
+        catch(SecurityException e)
+        {
+            errorLogText.setText(R.string.errorNoPermissionConnectionStatus);
+        }
+        catch(Exception e)
+        {
+            errorLogText.setText(R.string.errorProblemWithConnection);
+        }
+
+        return false;
     }
 
 }
