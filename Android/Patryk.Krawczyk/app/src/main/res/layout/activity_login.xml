@@ -79,5 +79,15 @@
         android:layout_centerHorizontal="true"
         android:onClick="onLoginButton"/>
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text=""
+        android:color="@color/red"
+        android:id="@+id/networkLogText"
+        android:layout_below="@+id/loginButton"
+        android:layout_centerHorizontal="true"/>
+
 
 </RelativeLayout>
