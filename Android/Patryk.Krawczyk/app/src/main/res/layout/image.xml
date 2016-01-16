@@ -4,13 +4,26 @@
               android:orientation="vertical"
               android:padding="5dp">
 
-    <com.android.volley.toolbox.NetworkImageView
-        android:id="@+id/imageView"
-        android:src="@drawable/patronage_logo"
+    <RelativeLayout
+        android:id="@+id/relative_container"
         android:layout_width="wrap_content"
-        android:layout_height="200dp"
-        android:gravity="center"
-        android:scaleType="fitCenter"/>
+        android:layout_height="wrap_content">
+        <ImageView
+            android:id="@+id/imageView"
+            android:src="@drawable/patronage_logo"
+            android:layout_width="wrap_content"
+            android:layout_height="200dp"
+            android:gravity="center"
+            android:scaleType="fitCenter"/>
+        <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/imageProgressBar"
+            android:layout_centerInParent="true"
+            android:visibility="visible"
+            android:startColor="#447a29"
+            android:endColor="#447a29"/>
+    </RelativeLayout>
 
     <TextView
         android:id="@+id/imageTitle"
@@ -18,7 +31,6 @@
         android:layout_height="wrap_content"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:text="tytul"
         android:textAlignment="center"/>
 
     <TextView
@@ -26,7 +38,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="15sp"
-        android:text="description"
         android:textAlignment="center" />
 
 </LinearLayout>

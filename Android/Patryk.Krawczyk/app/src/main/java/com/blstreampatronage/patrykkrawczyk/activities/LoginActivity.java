@@ -1,4 +1,4 @@
-package com.blstreampatronage.patrykkrawczyk;
+package com.blstreampatronage.patrykkrawczyk.activities;
 
 import android.content.Context;
 import android.content.Intent;
@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -14,24 +15,43 @@ import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.util.Patterns;
+
+import com.blstreampatronage.patrykkrawczyk.R;
+import com.blstreampatronage.patrykkrawczyk.activities.ImagesActivity;
+
 import java.util.regex.Pattern;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
+
+/**
+ * Activity that allows user to log in, will validate email and password for correctness
+ */
 public class LoginActivity extends AppCompatActivity {
 
-    private EditText emailEditText;
-    private EditText passwordEditText;
-    private TextView emailErrorTextView;
-    private TextView passwordErrorTextView;
-    private TextView errorLogText;
+    @Bind(R.id.emailEditText)     EditText emailEditText;
+    @Bind(R.id.passwordEditText)  EditText passwordEditText;
+    @Bind(R.id.emailErrorText)    TextView emailErrorTextView;
+    @Bind(R.id.passwordErrorText) TextView passwordErrorTextView;
+    @Bind(R.id.networkLogText)    TextView errorLogText;
 
-
+    /**
+     * Hide action bar, go full screen, hide notification bar
+     * Binds ButterKnife
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
         // Hide action bar
-        getSupportActionBar().hide();
+        ActionBar ab = null;
+        try {
+            ab = getSupportActionBar();
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        }
+        if (null != ab) ab.hide();
 
         // Hide notification/status bar
         if (Build.VERSION.SDK_INT < 16) {
@@ -42,17 +62,18 @@ public class LoginActivity extends AppCompatActivity {
             decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
         }
 
-        emailEditText         = (EditText) findViewById(R.id.emailEditText);
-        passwordEditText      = (EditText) findViewById(R.id.passwordEditText);
-        emailErrorTextView    = (TextView) findViewById(R.id.emailErrorText);
-        passwordErrorTextView = (TextView) findViewById(R.id.passwordErrorText);
-        errorLogText          = (TextView) findViewById(R.id.networkLogText);
+        ButterKnife.bind(this);
+
         errorLogText.setText("");
     }
 
+    /**
+     * When user presses the login button, email and password will be validated
+     * If everything is alright, user wil be logged in and activity will change
+     */
     public void onLoginButton(View v) {
-        String email    = emailEditText.getText().toString();
-        String password = passwordEditText.getText().toString();
+        String  email          = emailEditText.getText().toString();
+        String  password       = passwordEditText.getText().toString();
 
         boolean properEmail    = validateEmail(email);
         boolean properPassword = validatePassword(password);
@@ -63,6 +84,11 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Test if the email is not empty, and then if matches pattern of email
+     * @param email string containing user provided email
+     * @return success or false of validation
+     */
     private boolean validateEmail(String email) {
         if (TextUtils.isEmpty(email)) {
             emailErrorTextView.setText(R.string.emailTextViewEmpty);
@@ -75,10 +101,16 @@ public class LoginActivity extends AppCompatActivity {
             if (!isEmailCorrect) {
                 emailErrorTextView.setText(R.string.emailTextViewWrong);
             }
+
             return isEmailCorrect;
         }
     }
 
+    /**
+     * Test if the password is not empty, and then if it matches regex
+     * @param password string containing user provided password
+     * @return success or false of validation
+     */
     private boolean validatePassword(String password) {
         if (TextUtils.isEmpty(password)) {
             passwordErrorTextView.setText(R.string.passwordTextViewEmpty);
@@ -92,38 +124,45 @@ public class LoginActivity extends AppCompatActivity {
             if (!isPasswordCorrect) {
                 passwordErrorTextView.setText(R.string.passwordTextViewWrong);
             }
+
             return isPasswordCorrect;
         }
     }
 
+    /**
+     * After checking if email and password is correct, log user in and change activity
+     * @param email user provided email that has been tested for correctness
+     * @param password user provided password that has been tested for correctness
+     */
     private void loginUser(String email, String password) {
-        SharedPreferences sharedPref    = getSharedPreferences("UserInformation", this.MODE_PRIVATE);
+        SharedPreferences sharedPref    = getSharedPreferences("UserInformation", MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
 
         editor.putString(getString(R.string.userEmailKey),    email);
         editor.putString(getString(R.string.userPasswordKey), password);
-        editor.commit();
+        editor.apply();
 
         Intent intent = new Intent(this, ImagesActivity.class);
         startActivity(intent);
         finish();
     }
-    public boolean checkConnectionAvailability()
-    {
+
+    /**
+     * Test if user have access to internet and is connected
+     * @return true if user has internet access
+     */
+    public boolean checkConnectionAvailability() {
         errorLogText.setText(R.string.activityCheckConnection);
         ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
-        try
-        {
+        try {
             NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
             return activeNetworkInfo != null && activeNetworkInfo.isConnected();
         }
-        catch(SecurityException e)
-        {
+        catch(SecurityException e) {
             errorLogText.setText(R.string.errorNoPermissionConnectionStatus);
         }
-        catch(Exception e)
-        {
+        catch(Exception e) {
             errorLogText.setText(R.string.errorProblemWithConnection);
         }
 
