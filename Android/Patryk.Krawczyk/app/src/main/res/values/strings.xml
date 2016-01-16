@@ -6,7 +6,6 @@
     <string name="emailTextViewEmpty">Email required</string>
     <string name="passwordTextViewWrong">Invalid password!</string>
     <string name="emailTextViewWrong">Invalid email!</string>
-    <string name="logoutText">LOGOUT</string>
     <string name="userEmailKey">userEmail</string>
     <string name="userPasswordKey">userPassword</string>
     <string name="activityCheckConnection">Checking connection...</string>
