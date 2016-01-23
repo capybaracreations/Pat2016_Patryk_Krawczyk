@@ -1,17 +1,17 @@
 package com.blstreampatronage.patrykkrawczyk.activities;
 
-import android.support.v7.app.ActionBar;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.ProgressBar;
+
+import com.blstreampatronage.patrykkrawczyk.DebugHelper;
 import com.blstreampatronage.patrykkrawczyk.ImageAdapter;
 import com.blstreampatronage.patrykkrawczyk.JsonImageArray;
 import com.blstreampatronage.patrykkrawczyk.events.LoadNewImagesEvent;
@@ -22,6 +22,8 @@ import com.blstreampatronage.patrykkrawczyk.connection.ConnectionHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+import com.squareup.leakcanary.LeakCanary;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,17 +38,21 @@ import de.greenrobot.event.EventBus;
 public class ImagesActivity extends AppCompatActivity {
 
     @Bind(R.id.progressBar)
-    ProgressBar mProgressBar;
+    ProgressBar mMainPageProgressBar;
+
     @Bind(R.id.recyclerView)
     RecyclerView recyclerView;
 
     private ArrayList<SingleImage> mImageList;
-    private final EventBus eventBus = EventBus.getDefault();
-    private int mCurrentPage = -1;
-    private boolean mContinueLoading = true;        // used to finish loading when there is no more pages to load
+    private final EventBus     eventBus     = EventBus.getDefault();
+    private       int          mCurrentPage = -1;
+
+    private boolean mContinueLoading        = true; // used to finish loading when there is no more pages to load
     private boolean mDoneLoadingCurrentPage = true; // used to not allow multiple downloading of same page
 
-    private final static String BASE_SERVER_URL = "http://192.168.88.250:8080/"; // remember about trailing /
+    private final static String BASE_SERVER_URL      = "http://192.168.88.250:8080/"; // remember about trailing /
+    private final static String FILE_TO_BE_REQUESTED = "page_"; // mCurrentPage will be added at the end
+    private final static String EXTENSION_OF_FILE    = ".json";
 
     /**
      * Method ran when the activity starts
@@ -61,44 +67,35 @@ public class ImagesActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_images);
 
+        DebugHelper.initializeDebugHelpers(this, true, true);
+
         ButterKnife.bind(this);
         eventBus.register(this);
 
-        // Hide action bar
-        ActionBar ab = null;
-        try {
-            ab = getSupportActionBar();
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-        }
-        if (null != ab) ab.hide();
-
-        // Hide notification/status bar
-        if (Build.VERSION.SDK_INT < 16) {
-            int flagFullscreen = WindowManager.LayoutParams.FLAG_FULLSCREEN;
-            getWindow().setFlags(flagFullscreen, flagFullscreen);
-        } else {
-            View decorView = getWindow().getDecorView();
-            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
-        }
 
         mImageList = new ArrayList<>();
 
-        //recyclerView.setHasFixedSize(true);
+        initializeRecyclerView();
 
+        initializeUIL();
+
+        // initialize list
+        bottomDetected();
+    }
+
+    /**
+     * Initializes RecyclerView
+     */
+    private void initializeRecyclerView() {
         RecyclerView.LayoutManager layoutManager;
-        if (getResources().getBoolean(R.bool.isTablet)) {
-            layoutManager = new GridLayoutManager(this, 4);
-        } else {
-            layoutManager = new GridLayoutManager(this, 2);
-        }
+        int columnsAmountBasedOnIfItsTablet = getResources().getInteger(R.integer.numOfColumns);
+        layoutManager = new GridLayoutManager(this, columnsAmountBasedOnIfItsTablet);
 
         recyclerView.setLayoutManager(layoutManager);
 
         ImageAdapter myAdapter = new ImageAdapter(this, mImageList);
         recyclerView.setAdapter(myAdapter);
 
-        // detecting bottom of list
         RecyclerView.OnScrollListener onScrollListener =  new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
@@ -111,15 +108,15 @@ public class ImagesActivity extends AppCompatActivity {
             }
         };
         recyclerView.addOnScrollListener(onScrollListener);
+    }
 
-        //initialize UIL
+    /**
+     * Initializes Universal Image Loader library in this activity
+     */
+    private void initializeUIL() {
         ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(this)
                 .build();
         ImageLoader.getInstance().init(config);
-
-        // initialize list
-        bottomDetected();
-        Log.d("TAG", "end of onCreate");
     }
 
     /**
@@ -139,7 +136,7 @@ public class ImagesActivity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    mProgressBar.setVisibility(View.INVISIBLE);
+                    mMainPageProgressBar.setVisibility(View.INVISIBLE);
                 }
             });
         }
@@ -160,7 +157,7 @@ public class ImagesActivity extends AppCompatActivity {
     private void bottomDetected() {
         Log.d("TAG", "bottomDetected");
         if (mDoneLoadingCurrentPage) {
-            mProgressBar.setVisibility(View.VISIBLE);
+            mMainPageProgressBar.setVisibility(View.VISIBLE);
             ++mCurrentPage;
             mDoneLoadingCurrentPage = false;
             getPage();
@@ -173,7 +170,7 @@ public class ImagesActivity extends AppCompatActivity {
      */
     private void getPage() {
         Log.d("TAG", "getPage");
-        String url = BASE_SERVER_URL + "page_" + mCurrentPage + ".json";
+        String url = BASE_SERVER_URL + FILE_TO_BE_REQUESTED + mCurrentPage + EXTENSION_OF_FILE;
 
         mContinueLoading = false;
 
@@ -207,14 +204,14 @@ public class ImagesActivity extends AppCompatActivity {
 
     /**
      * Logout user by defaulting values in SharedPreferences file
-     * @param v Button that was clicked to log out the user
+     * @param view Button that was clicked to log out the user
      */
-    public void onLogOutUser(View v) {
-        SharedPreferences sharedPref = getSharedPreferences("UserInformation", MODE_PRIVATE);
+    public void onLogOutUser(View view) {
+        SharedPreferences sharedPref = getSharedPreferences(getString(R.string.loginInformationFile), Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
 
-        editor.putString(getString(R.string.userEmailKey), null);
-        editor.putString(getString(R.string.userPasswordKey), null);
+        editor.putString(getString(R.string.userEmailKey),    "");
+        editor.putString(getString(R.string.userPasswordKey), "");
         editor.apply();
 
         Intent intent = new Intent(this, LoginActivity.class);
@@ -231,8 +228,9 @@ public class ImagesActivity extends AppCompatActivity {
 
         boolean completion = false;
         completion = ConnectionHandler.getInstance().finishAllTasks();
-        if (completion == false)
+        if (completion == false) {
             Log.d("TAG", "Error during cleaning of async tasks in ConnectionHandler.finishAllTasks()");
+        }
     }
 }
 

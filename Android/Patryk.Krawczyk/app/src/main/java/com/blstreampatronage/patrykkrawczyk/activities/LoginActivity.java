@@ -5,19 +5,17 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.Build;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.util.Patterns;
 
+import com.blstreampatronage.patrykkrawczyk.DebugHelper;
 import com.blstreampatronage.patrykkrawczyk.R;
-import com.blstreampatronage.patrykkrawczyk.activities.ImagesActivity;
 
 import java.util.regex.Pattern;
 
@@ -34,7 +32,6 @@ public class LoginActivity extends AppCompatActivity {
     @Bind(R.id.emailErrorText)    TextView emailErrorTextView;
     @Bind(R.id.passwordErrorText) TextView passwordErrorTextView;
     @Bind(R.id.networkLogText)    TextView errorLogText;
-
     /**
      * Hide action bar, go full screen, hide notification bar
      * Binds ButterKnife
@@ -44,34 +41,37 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        // Hide action bar
-        ActionBar ab = null;
-        try {
-            ab = getSupportActionBar();
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-        }
-        if (null != ab) ab.hide();
-
-        // Hide notification/status bar
-        if (Build.VERSION.SDK_INT < 16) {
-            int flagFullscreen = WindowManager.LayoutParams.FLAG_FULLSCREEN;
-            getWindow().setFlags(flagFullscreen, flagFullscreen);
-        } else {
-            View decorView = getWindow().getDecorView();
-            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
-        }
-
+        DebugHelper.initializeDebugHelpers(this, true, true);
         ButterKnife.bind(this);
-
         errorLogText.setText("");
+
+        checkIfUserIsAlreadyLogedIn();
+    }
+
+    /**
+     * Log in user that already provided his credentials before
+     */
+    private void checkIfUserIsAlreadyLogedIn() {
+        SharedPreferences sharedPref = getSharedPreferences(getString(R.string.loginInformationFile), Context.MODE_PRIVATE);
+        String userEmail = sharedPref.getString(getString(R.string.userEmailKey), "");
+        String userPassword = sharedPref.getString(getString(R.string.userPasswordKey), "");
+
+        boolean properEmail = !userEmail.isEmpty();
+        boolean properPassword = !userPassword.isEmpty();
+
+        Log.v("tag", ""+properEmail);
+        Log.v("tag", ""+properPassword);
+
+        if (properEmail && properPassword) {
+            moveToImagesActivity();
+        }
     }
 
     /**
      * When user presses the login button, email and password will be validated
      * If everything is alright, user wil be logged in and activity will change
      */
-    public void onLoginButton(View v) {
+    public void onLoginButton(View view) {
         String  email          = emailEditText.getText().toString();
         String  password       = passwordEditText.getText().toString();
 
@@ -80,13 +80,15 @@ public class LoginActivity extends AppCompatActivity {
 
         if (properEmail && properPassword) {
             errorLogText.setText("");
-            if (checkConnectionAvailability()) loginUser(email, password);
+            if (checkConnectionAvailability()) {
+                loginUser(email, password);
+            }
         }
     }
 
     /**
      * Test if the email is not empty, and then if matches pattern of email
-     * @param email string containing user provided email
+     * @param email string containing user provided email to be validated
      * @return success or false of validation
      */
     private boolean validateEmail(String email) {
@@ -108,7 +110,7 @@ public class LoginActivity extends AppCompatActivity {
 
     /**
      * Test if the password is not empty, and then if it matches regex
-     * @param password string containing user provided password
+     * @param password string containing user provided password to be validated
      * @return success or false of validation
      */
     private boolean validatePassword(String password) {
@@ -135,16 +137,14 @@ public class LoginActivity extends AppCompatActivity {
      * @param password user provided password that has been tested for correctness
      */
     private void loginUser(String email, String password) {
-        SharedPreferences sharedPref    = getSharedPreferences("UserInformation", MODE_PRIVATE);
+        SharedPreferences sharedPref    = getSharedPreferences(getString(R.string.loginInformationFile), Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
 
         editor.putString(getString(R.string.userEmailKey),    email);
         editor.putString(getString(R.string.userPasswordKey), password);
         editor.apply();
 
-        Intent intent = new Intent(this, ImagesActivity.class);
-        startActivity(intent);
-        finish();
+        moveToImagesActivity();
     }
 
     /**
@@ -159,7 +159,7 @@ public class LoginActivity extends AppCompatActivity {
             NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
             return activeNetworkInfo != null && activeNetworkInfo.isConnected();
         }
-        catch(SecurityException e) {
+        catch(SecurityException se) {
             errorLogText.setText(R.string.errorNoPermissionConnectionStatus);
         }
         catch(Exception e) {
@@ -167,6 +167,12 @@ public class LoginActivity extends AppCompatActivity {
         }
 
         return false;
+    }
+
+    private void moveToImagesActivity() {
+        Intent intent = new Intent(this, ImagesActivity.class);
+        startActivity(intent);
+        finish();
     }
 
 }

@@ -1,5 +1,6 @@
 package com.blstreampatronage.patrykkrawczyk;
 
+
 public class SingleImage {
 
     private String title = "";
