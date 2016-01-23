@@ -23,12 +23,12 @@ public class DownloadTask extends AsyncTask<URL, Integer, Boolean> implements Ca
     /**
      * Constructor for DownloadTask, executes task immediately
      * @param url address at which we want to do GET request
-     * @param c client that is used to make request
-     * @param tasks List of tasks handled by ConnectionHandler
+     * @param okHttpClient client that is used to make request
+     * @param downloadTaskList List of tasks handled by ConnectionHandler
      */
-    public DownloadTask(URL url, OkHttpClient c, List<DownloadTask> tasks) {
-        mClient = c;
-        mTasks  = tasks;
+    public DownloadTask(URL url, OkHttpClient okHttpClient, List<DownloadTask> downloadTaskList) {
+        mClient = okHttpClient;
+        mTasks  = downloadTaskList;
 
         this.execute(url);
     }
@@ -42,7 +42,9 @@ public class DownloadTask extends AsyncTask<URL, Integer, Boolean> implements Ca
 
         Request request = new Request.Builder().url(urls[0]).build();
 
-        if (isCancelled()) return false;
+        if (isCancelled()) {
+            return false;
+        }
 
         mClient.newCall(request).enqueue(this);
 
@@ -52,11 +54,11 @@ public class DownloadTask extends AsyncTask<URL, Integer, Boolean> implements Ca
     /**
      * The GET Request has failed, dispatch Event with isError flag set to true
      * @param request  provided by Client, used to print its body
-     * @param e exception that was returned, source of failure
+     * @param exception exception that was returned, source of failure
      */
     @Override
-    public void onFailure(Request request, IOException e) {
-        e.printStackTrace();
+    public void onFailure(Request request, IOException exception) {
+        exception.printStackTrace();
         Log.d("TAG", request.toString());
 
         EventBus.getDefault().post(new LoadNewImagesEvent(request.toString(), true));
@@ -73,7 +75,9 @@ public class DownloadTask extends AsyncTask<URL, Integer, Boolean> implements Ca
         int     code  = response.code();
         boolean error = false;
 
-        if (code != 200) error = true;
+        if (code != 200) {
+            error = true;
+        }
         String message = response.body().string();
 
         EventBus.getDefault().post(new LoadNewImagesEvent(message, error));

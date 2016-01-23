@@ -11,4 +11,5 @@
     <string name="activityCheckConnection">Checking connection...</string>
     <string name="errorNoPermissionConnectionStatus">App doesnt have internet permissions.</string>
     <string name="errorProblemWithConnection">No internet connection.</string>
+    <string name="loginInformationFile">UserInformation</string>
 </resources>

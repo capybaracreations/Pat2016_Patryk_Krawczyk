@@ -23,6 +23,10 @@ public class ConnectionHandler {
             mTasks  = new ArrayList<>();
         }
 
+    /**
+     * Checks whether OkHttpClient is available and returns is
+     * @return OkHttpClient instance
+     */
         private OkHttpClient getOkHttpClient() {
             if (mClient == null) {
                 mClient = new OkHttpClient();
@@ -59,7 +63,9 @@ public class ConnectionHandler {
                 return null;
             }
 
-            if (null != dt) mTasks.add(dt);
+            if (null != dt) {
+                mTasks.add(dt);
+            }
 
             return dt;
         }

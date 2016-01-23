@@ -1,14 +1,11 @@
 package com.blstreampatronage.patrykkrawczyk.activities;
 
-import android.support.v7.app.ActionBar;
 import android.content.Intent;
-import android.os.Build;
 import android.os.CountDownTimer;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.View;
-import android.view.WindowManager;
 
+import com.blstreampatronage.patrykkrawczyk.DebugHelper;
 import com.blstreampatronage.patrykkrawczyk.R;
 
 /**
@@ -31,23 +28,7 @@ public class SplashScreenActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash_screen);
 
-        // Hide action bar
-        ActionBar ab = null;
-        try {
-            ab = getSupportActionBar();
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-        }
-        if (null != ab) ab.hide();
-
-        // Hide notification/status bar
-        if (Build.VERSION.SDK_INT < 16) {
-            int flagFullscreen = WindowManager.LayoutParams.FLAG_FULLSCREEN;
-            getWindow().setFlags(flagFullscreen, flagFullscreen);
-        } else {
-            View decorView = getWindow().getDecorView();
-            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
-        }
+        DebugHelper.initializeDebugHelpers(this, true, true);
 
         createCountdown();
     }
@@ -64,7 +45,7 @@ public class SplashScreenActivity extends AppCompatActivity
             }
 
             public void onFinish() {
-                moveToMainActivity();
+                moveToLogInActivity();
             }
         };
 
@@ -72,22 +53,37 @@ public class SplashScreenActivity extends AppCompatActivity
     }
 
     /**
+     * Cancel current countdown
+     */
+    private void cancelCountdown() {
+        if (null != countDownTimer) {
+            countDownTimer.cancel();
+        }
+    }
+
+    /**
      * Move user to the next activity
      */
-    private void moveToMainActivity() {
+    private void moveToLogInActivity() {
         Intent intent = new Intent(this, LoginActivity.class);
         startActivity(intent);
         finish();
     }
 
     /**
-     * When user presses the back button, countdown will be canceled
+     * Cancel the countdown on back button press
      */
     @Override
     public void onBackPressed() {
-        // TODO: implement something to let user know that app is running
-        if (null != countDownTimer) {
-            countDownTimer.cancel();
-        }
+        cancelCountdown();
+    }
+
+    /**
+     * Cancel the countdown on leaving the app
+     */
+    @Override
+    protected void onPause() {
+        super.onPause();
+        cancelCountdown();
     }
 }
